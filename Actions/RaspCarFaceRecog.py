@@ -10,6 +10,7 @@ from Actions.Action import Action
 class RaspToSpeak(Action):
 
     def execute(self):
+        super(RaspToSpeak, self).execute()
         cx = 160
         cy = 120
         xdeg = 150

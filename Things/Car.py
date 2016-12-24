@@ -12,7 +12,6 @@ class RaspCar(Car):
 
     def load_storylines(self):
         super(Car, self).load_storylines()
-        #self.storylines.append(RaspCarDance())
         self.storylines.append(RaspCarPatrol())
 
     def load_believes(self):

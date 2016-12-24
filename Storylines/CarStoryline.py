@@ -9,8 +9,8 @@ class CarStoryLine(StoryLine):
 # This is for Dance: Move 1cm, turn around, move another around
 class RaspCarDance(CarStoryLine):
 
-    def start(self):
-        super(CarStoryLine, self).start()
+    def begin(self):
+        super(CarStoryLine, self).begin()
         self.actions.append(RaspCarMoveForward())
         self.actions.append(RaspCarTurnAround())
         self.actions.append(RaspCarTurnLeft())
@@ -22,8 +22,6 @@ class RaspCarDance(CarStoryLine):
 # Move forward until block, then turn back, until another block.
 class RaspCarPatrol(CarStoryLine):
 
-    def start(self):
-        super(CarStoryLine, self).start()
-        self.actions.append(RaspCarMoveForward())
-        self.actions.append(RaspCarTurnAround())
+    def begin(self):
+        super(CarStoryLine, self).begin()
         self.actions.append(RaspCarMoveForward())

@@ -11,7 +11,3 @@ class TestBaseWorld(unittest.TestCase):
         self.assertTrue(len(thing.mood) > 0)
         self.assertTrue(thing.status)
         self.assertTrue(thing.name)
-
-    def test_RaspCar(self):
-        rasp_car = RaspCar("Tang")
-        rasp_car.alive()

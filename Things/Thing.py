@@ -32,6 +32,6 @@ class Thing(object):
 
     def alive(self):
         for storyline in self.storylines:
-            storyline.start()
+            storyline.begin()
             storyline.execute()
-            storyline.done()
+            storyline.finish()

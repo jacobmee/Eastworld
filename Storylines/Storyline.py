@@ -1,5 +1,3 @@
-from Actions.Action import Action
-
 
 class StoryLine(object):
     def __init__(self):
@@ -7,12 +5,12 @@ class StoryLine(object):
 
     def execute(self):
         for action in self.actions:
-            action.start()
+            action.begin()
             action.execute()
-            action.done()
+            action.finish()
 
-    def start(self):
+    def begin(self):
         pass
 
-    def done(self):
+    def finish(self):
         pass
