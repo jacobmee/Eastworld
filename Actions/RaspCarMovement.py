@@ -1,12 +1,13 @@
 #! /usr/bin/python
 
 import time
-import Queue
 import RPi.GPIO as GPIO
 import logging
+import Queue
 
+from Queue import PriorityQueue
 from Actions.Action import Action
-from Actions.Action import MovementEvent
+from Actions.Action import Event
 from Actions.RaspCarUltrasonicScan import RaspUltrasonicScan
 from Actions.RaspCarWallDetect import RaspCarWallDetect
 
@@ -17,7 +18,8 @@ class CarMovement(Action):
     def __init__(self):
         super(CarMovement, self).__init__()
         self.CTRL = {"IN1": 12, "IN2": 16, "IN3": 18, "IN4": 22}
-        self.block_events = Queue.Queue(3)
+        self.sensor_events = PriorityQueue(5)
+
 
     # Initialize the moter
     def begin(self):
@@ -54,12 +56,12 @@ class RaspCarMoveForward(CarMovement):
     def __init__(self):
         super(RaspCarMoveForward, self).__init__()
         # Create a thread, and put the detection in.  If the thread already exists, do nothing.
-        self.wall_detection = RaspCarWallDetect(self.block_events)
+        self.wall_detection = RaspCarWallDetect(self.sensor_events)
         self.wall_detection.setDaemon(True)
         self.wall_detection.start()
 
         # Create a thread, and put the detection in.  If the thread already exists, do nothing.
-        self.ultrasonic_scan = RaspUltrasonicScan(self.block_events)
+        self.ultrasonic_scan = RaspUltrasonicScan(self.sensor_events)
         self.ultrasonic_scan.setDaemon(True)
         self.ultrasonic_scan.start()
 
@@ -76,61 +78,87 @@ class RaspCarMoveForward(CarMovement):
         GPIO.output(self.CTRL["IN1"], GPIO.HIGH)
         GPIO.output(self.CTRL["IN4"], GPIO.HIGH)
 
-        while self.running:
 
-            logging.debug("waiting for task")
+        #while self.running:
+        for i in range(0, 5):
+            # Working on block events first.
             try:
-                movement_event = self.block_events.get(block=True, timeout=10)
-            except Queue.Empty:
-                logging.debug("Too far away, I will stop!")
-                break
+                sensor_event = self.sensor_events.get(block=True, timeout=10)
 
-            logging.debug("task recv:%s " % movement_event.name)
-            logging.debug("task raised time %d" % movement_event.time)
-            logging.debug("i am working on this request")
+                logging.debug("task recv:%d, %s @%d " % (sensor_event.priority, sensor_event.name, sensor_event.time))
+                logging.debug("i am working on this sensor event")
 
-            # WALL_TO_STOP; TURN_RIGHT; TURN_LEFT; BACKWARD; TURN_AROUND
-            if movement_event.name == MovementEvent.EVENT_BLOCKER:
-                #next_move = evalute_next_move()
+                # WALL_TO_STOP; TURN_RIGHT; TURN_LEFT; BACKWARD; TURN_AROUND
+                if sensor_event.name == Event.EVENT_BLOCKER:
+                    # next_move = evalute_next_move()
 
-                logging.debug("Into MOVE action :[%d]!!!" % self.wall_detection.recommend_direction)
-                if self.wall_detection.recommend_direction == MovementEvent.TURN_RIGHT:
-                    self.stop()
-                    rasp_turn_right = RaspCarTurnRight()
-                    rasp_turn_right.run()
-                    logging.debug("TURN right!")
-                elif self.wall_detection.recommend_direction == MovementEvent.TURN_LEFT:
-                    self.stop()
-                    rasp_turn_left = RaspCarTurnLeft()
-                    rasp_turn_left.run()
-                    logging.debug("TURN left!")
-                elif self.ultrasonic_scan.recommend_direction == MovementEvent.TURN_BACKWARD:
-                    self.stop()
-                    rasp_move_backward = RaspCarMoveBackward()
-                    rasp_move_backward.run()
-                    logging.debug("Backward!")
-                    time.sleep(1)
-                    rasp_turn_around = RaspCarTurnAround()
-                    rasp_turn_around.run()
-                    logging.debug("TURN around!")
-                elif self.wall_detection.recommend_direction == MovementEvent.TURN_AROUND:
-                    self.stop()
-                    rasp_turn_around = RaspCarTurnAround()
-                    rasp_turn_around.run()
-                    logging.debug("TURN around!")
-                else :
-                    self.stop()
-                    logging.debug("So confused...")
+                    logging.debug("Into MOVE action :[%d]!!!" % self.wall_detection.recommend_direction)
+                    if self.wall_detection.recommend_direction == Event.TURN_RIGHT:
+                        self.stop()
+                        rasp_turn_right = RaspCarTurnRight()
+                        rasp_turn_right.run()
+                        logging.debug("TURN right!")
+                    elif self.wall_detection.recommend_direction == Event.TURN_LEFT:
+                        self.stop()
+                        rasp_turn_left = RaspCarTurnLeft()
+                        rasp_turn_left.run()
+                        logging.debug("TURN left!")
+                    elif self.wall_detection.recommend_direction == Event.TURN_AROUND:
+                        self.stop()
+                        rasp_turn_around = RaspCarTurnAround()
+                        rasp_turn_around.run()
+                        logging.debug("TURN around!")
+                    else:
+                        self.stop()
+                        logging.debug("So confused...")
+                elif sensor_event.name == Event.EVENT_ADJUSTMENT:
+                    logging.debug("Requested adjustment: %d", self.ultrasonic_scan.recommend_direction)
+                    if self.ultrasonic_scan.recommend_direction == Event.TURN_BACKWARD:
+                        self.stop()
+                        rasp_move_backward = RaspCarMoveBackward()
+                        rasp_move_backward.run()
+                        logging.debug("Backward!")
+                        rasp_turn_around = RaspCarTurnAround()
+                        rasp_turn_around.run()
+                        logging.debug("TURN around!")
+                    else:
+                        if self.ultrasonic_scan.recommend_direction > 0:
+                            self.stop()
+                            time.sleep(0.5)
+                            GPIO.output(self.CTRL["IN1"], GPIO.HIGH)
+                            sleep_time = 0.6 + (0.5 * self.ultrasonic_scan.recommend_direction / 90)
+                            if sleep_time > 0:
+                                time.sleep(sleep_time)
+                            logging.debug("TURN right from ultrasonic : %d, T[%.2f]!" % (self.ultrasonic_scan.recommend_direction, sleep_time))
+                        elif self.ultrasonic_scan.recommend_direction < 0:
+                            self.stop()
+                            time.sleep(1)
+                            GPIO.output(self.CTRL["IN4"], GPIO.HIGH)
+
+                            sleep_time = 0.6 + (-0.5 * self.ultrasonic_scan.recommend_direction / 90)
+                            if sleep_time > 0:
+                                time.sleep(sleep_time)
+                            logging.debug("TURN left from ultrasonic : %d, T[%.2f]!" % (self.ultrasonic_scan.recommend_direction, sleep_time))
+
+                    self.ultrasonic_scan.recommend_direction = 0
 
                 logging.debug("Next move finished!")
 
-                self.block_events.task_done()
-                res = self.block_events.qsize()
-                while not self.block_events.empty():
-                    task = self.block_events.get()
-                    self.block_events.task_done()
-                    logging.debug("Clean up everything in Q.  There are still %d tasks to do" % self.block_events.qsize())
+                # Clean data
+                self.sensor_events.task_done()
+                res = self.sensor_events.qsize()
+                while not self.sensor_events.empty():
+                    task = self.sensor_events.get()
+                    logging.debug(
+                        "Clean up everything in sensor Q.  There are still %d tasks to do, next:%s, %d" % (self.sensor_events.qsize(), task.name, task.priority))
+                    self.sensor_events.task_done()
 
+                logging.debug(
+                    "Clean up everything in sensor Q.  There are still %d tasks to do" % self.sensor_events.qsize())
+
+            except Queue.Empty:
+                logging.debug("Too far away, I will stop!")
+                break
 
             # Resume forward
             self.running = True

@@ -5,14 +5,29 @@ from Storylines.CarStoryline import *
 class Car(Thing):
     pass
 
-
 class RaspCar(Car):
+    SILENT_MODE = "silent"  # Silent means do nothing
+    SPORTS_MODE = "sports"  # Moving, driving, scan sensors on
+    WATCHING_MODE = "watching"  # In alarm, anything passed or in room, will be filing alerts.
+    PARTY_MODE = "party"  # Behavior like DJ, able to play music or movies
+
     def load_memory(self):
-        super(Car, self).load_memory()
+        super(RaspCar, self).load_memory()
 
     def load_storylines(self):
-        super(Car, self).load_storylines()
-        self.storylines.append(RaspCarPatrol())
+        super(RaspCar, self).load_storylines()
+
+        logging.debug("Into [%s] mode" % self.mode)
+        if self.mode == self.SPORTS_MODE:
+            self.storylines.append(RaspCarPatrol())
+        elif self.mode == self.WATCHING_MODE:
+            self.storylines.append(RaspCarWatching())
+        elif self.mode == self.PARTY_MODE:
+            pass
+        else:
+            self.mode = self.SILENT_MODE
+
+        logging.debug("Into [%s] mode" % self.mode)
 
     def load_believes(self):
             self.believes = [Believe.STRANGER, Believe.WARRIOR]

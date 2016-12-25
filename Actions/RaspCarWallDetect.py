@@ -4,7 +4,7 @@ import time
 import RPi.GPIO as GPIO
 
 from Actions.Action import Action
-from Actions.RaspCarMovement import MovementEvent
+from Actions.RaspCarMovement import Event
 
 
 class RaspCarWallDetect(Action, threading.Thread):
@@ -42,16 +42,16 @@ class RaspCarWallDetect(Action, threading.Thread):
 
             if GPIO.input(self.PIN_LEFT_DETECTION) == 0:
                 left_detection = True
-                self.recommend_direction = MovementEvent.TURN_RIGHT
+                self.recommend_direction = Event.TURN_RIGHT
             if GPIO.input(self.PIN_RIGHT_DETECTION) == 0:
                 right_detection = True
-                self.recommend_direction = MovementEvent.TURN_RIGHT
+                self.recommend_direction = Event.TURN_LEFT
             if left_detection and right_detection:
                 both_detection = True
-                self.recommend_direction= MovementEvent.TURN_AROUND
+                self.recommend_direction= Event.TURN_AROUND
 
             if left_detection or right_detection or both_detection:
-                event = MovementEvent(MovementEvent.EVENT_BLOCKER)
+                event = Event(Event.PRIORITY_MEDIUM, Event.EVENT_BLOCKER)
                 self.block_events.put(event)
                 logging.debug("An BLOCKER Event filed by wall detector: %d" % self.recommend_direction)
 

@@ -3,8 +3,9 @@ from Storylines.Storyline import StoryLine
 
 
 class Thing(object):
-    def __init__(self, name):
+    def __init__(self, name, mode):
         self.name = name
+        self.mode = mode
         self.load_status()
         self.load_memory()
         self.load_believes()
