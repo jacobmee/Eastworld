@@ -1,4 +1,4 @@
-# East World
+# Eastworld
 This project is to re-create an "AI" world who can be useful helper.  With Raspberry came to alive, it becomes feasiable that small machines can talk to each other, enable other and interactive with humans.
 
 The name comes from the TV series "West World", and hopefully with rapid development of robots in east world, we'll have more "AI" enable machines to help this planet.
