@@ -55,7 +55,7 @@ class RaspCarWallDetect(Action, threading.Thread):
                 self.block_events.put(event)
                 logging.debug("An BLOCKER Event filed by wall detector: %d" % self.recommend_direction)
 
-            time.sleep(0.1)
+            time.sleep(1)
 
     def finish(self):
         super(RaspCarWallDetect, self).finish()

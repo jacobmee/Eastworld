@@ -25,7 +25,7 @@ class RaspCarPatrol(CarStoryLine):
 
     def begin(self):
         super(RaspCarPatrol, self).begin()
-        self.actions.append(RaspCarMoveForward())
+        self.actions.append(RaspCarMove())
 
 
 # Move forward until block, then turn back, until another block.

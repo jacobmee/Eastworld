@@ -10,7 +10,7 @@ def checkdist():
     # Set trigger
     GPIO.output(PIN_TRIGGER, GPIO.HIGH)
     # Wait for 15us
-    time.sleep(0.000015)
+    time.sleep(0.00005)
     GPIO.output(PIN_TRIGGER, GPIO.LOW)
     while not GPIO.input(PIN_ECHO):
         pass
@@ -46,15 +46,32 @@ p = GPIO.PWM(36, 50)  # 50HZ
 p.start(0)
 
 
-p.ChangeDutyCycle(7)
-time.sleep(0.3)
+for k in range (0, 3):
+    for i in range(0, 181, 10):
+        cycle = 2.5 + 10 * i / 180
+        p.ChangeDutyCycle(cycle)
+        time.sleep(0.02)
+        distance = checkdist()
+        print "c:[%.1f], a:[%d], d:[%d]" % (cycle, i, distance)
+        p.ChangeDutyCycle(0)
+        time.sleep(0.2)
 
+    for i in range(180, -1, -10):
+        cycle = 2.5 + 10 * i / 180
+        p.ChangeDutyCycle(cycle)
+        time.sleep(0.2)
+        #distance = checkdist()
+        #print "c:[%.1f], a:[%d], d:[%d]" % (cycle, i, distance)
+        #p.ChangeDutyCycle(0)
+        #time.sleep(0.02)
+    time.sleep(5)
 
-for i in range(0, 30, 10):
+'''
+for i in range(0, 180, 10):
     cycle = 7 + 6 * i / 30
     print "i:%d  c:%d" %(i, cycle)
     p.ChangeDutyCycle(cycle)
-    time.sleep(0.3)
+    time.sleep(0.02)
     distance = checkdist()
     print "distance: %d" % distance
     #time.sleep(0.1)
@@ -65,12 +82,10 @@ for i in range(50, -50, -10):
     cycle = 7 + 5 * i / 50
     print "i:%d  c:%d" % (i, cycle)
     p.ChangeDutyCycle(cycle)
-    time.sleep(0.3)
+    time.sleep(0.2)
     distance = checkdist()
     print "distance: %d" % distance
-    #time.sleep(0.1)
+    #time.sleep(0.1)'''
 
-p.ChangeDutyCycle(7)
-time.sleep(0.3)
 
 GPIO.cleanup()

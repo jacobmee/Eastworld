@@ -6,6 +6,9 @@ class Car(Thing):
     pass
 
 class RaspCar(Car):
+    def __init__(self, name, mode):
+        super(RaspCar, self).__init__(name, mode)
+
     SILENT_MODE = "silent"  # Silent means do nothing
     SPORTS_MODE = "sports"  # Moving, driving, scan sensors on
     WATCHING_MODE = "watching"  # In alarm, anything passed or in room, will be filing alerts.
