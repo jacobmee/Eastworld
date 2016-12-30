@@ -69,36 +69,49 @@ class RaspUltrasonicScan(Action, threading.Thread):
         logging.info("GPIO SET: ECHO PIN[%s]" % self.PIN_ECHO)
 
 
+        count = 0
         while self.running:
 
             scanning_data = {}
             #logging.debug("Ultrasonic Scan started")
 
-            # Scan for -90 to 90, can keep the data for later calculation.
-            for i in range(0, 181, 10):
-                cycle = 2.5 + 10 * i / 180
-                p.ChangeDutyCycle(cycle)
-                time.sleep(0.02)
-                distance = self.checkdist()
-                scanning_data[i] = round(distance)
-                p.ChangeDutyCycle(0)
-                time.sleep(0.02)
+            start_point = 2.5
+            length = 10.0
 
-            for i in range(180, -1, -10):
-                cycle = 2.5 + 10 * i / 180
-                p.ChangeDutyCycle(cycle)
-                time.sleep(0.02)
-                distance = self.checkdist()
-                avg_distance = (distance + scanning_data[i])/2
-                scanning_data[i] = round(avg_distance)
-                p.ChangeDutyCycle(0)
-                time.sleep(0.02)
+            if count % 2 == 0:
+                for i in range(30, 151, 15):
+                    cycle = start_point + (length * (i)) / 180
+                    p.ChangeDutyCycle(cycle)
+                    time.sleep(0.02)
 
-            logging.debug("Ultrasonic Scan finished: %s" % scanning_data)
+                    distance = 0
+                    for j in range(0, 3):
+                        distance = distance + self.checkdist()
+
+                    scanning_data[i] = round(distance / 3)
+
+                    p.ChangeDutyCycle(0)
+                    time.sleep(0.02)
+            else:
+                for i in range(150, 29, -15):
+                    cycle = start_point + (length * (i)) / 180
+                    p.ChangeDutyCycle(cycle)
+                    time.sleep(0.02)
+                    distance = 0
+                    for j in range(0, 3):
+                        distance = distance + self.checkdist()
+
+                    scanning_data[i] = round(distance / 3)
+
+                    p.ChangeDutyCycle(0)
+                    time.sleep(0.02)
+
+            count = count + 1
+            logging.debug("One ultrasonic scan finished")
 
             self.ultrasonic_data[time.time()] = scanning_data.copy()
 
-            time.sleep(3)
+            time.sleep(0.3)
 
 
     def finish(self):
