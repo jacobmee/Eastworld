@@ -46,3 +46,10 @@ modifing "/etc/modprobe.d/alsa-base.conf
     sudo pip install gTTS
 #### 4. Speech Recognition
     pip install SpeechRecognition
+    
+### Load into system starts
+    cp etc/eastworld /etc/init.d/
+    sudo chmod +x /etc/init.d/eastworld
+    sudo update-rc.d eastworld defaults
+    sudo service eastworld start#启动
+    sudo service eastworld stop#停止

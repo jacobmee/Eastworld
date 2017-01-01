@@ -16,16 +16,12 @@ btts.say("你说")
 
 # obtain audio from the microphone
 gr = sr.Recognizer()
-gm = sr.Microphone()
-gm.RATE = 44100
+gm = sr.Microphone(sample_rate=16000)
+#gm.RATE = 16000
 #m.CHUNK = 512
 
 br = pby.Recognizer()
 bm = pby.Microphone()
-
-'''with m as source:
-    print("Say something!")
-    audio = r.listen(source)'''
 
 use_Google_recognize = True
 use_Google_TTS = False
@@ -41,12 +37,13 @@ while True:
     if use_Google_recognize :
 
 
-        os.system('arecord -r 16000 -d 3 -D plughw:0,0 temp.wav')
+
+        os.system('arecord -f S16_LE -r 16000 -d 3 -D plughw:0,0 temp.wav')
         AUDIO_FILE = path.join(path.dirname(path.realpath(__file__)), "temp.wav")
         with sr.AudioFile(AUDIO_FILE) as source:
             audio = gr.record(source)  # read the entire audio file
 
-        '''''
+        '''
         with gm as source:
             print("Say something!")
             audio = gr.listen(source)'''
@@ -62,7 +59,7 @@ while True:
             text = result.encode('utf-8').strip()
 
         except sr.UnknownValueError:
-            print("Google Speech Recognition could not understand audio")
+            print("Google Speech Recogni/tion could not understand audio")
         except sr.RequestError as e:
             print("Could not request results from Google Speech Recognition service; {0}".format(e))
 
