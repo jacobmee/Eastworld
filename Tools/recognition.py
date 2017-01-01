@@ -39,11 +39,7 @@ while True:
     text = ""
     # Try google first if can't access, always use Baidu
     if use_Google :
-
-
-
         audio = None
-
         os.system('arecord -f S16_LE -r 16000 -d 3 -D plughw:0,0 temp.wav')
         AUDIO_FILE = path.join(path.dirname(path.realpath(__file__)), "temp.wav")
         with sr.AudioFile(AUDIO_FILE) as source:

@@ -6,10 +6,17 @@ class Thing(object):
     def __init__(self, name, mode):
         self.name = name
         self.mode = mode
+
+        self.status = Status.ACTIVE
+        self.believes = [Believe.STRANGER]
+        self.mood = [Mood.ANGER]
+        self.rules = []
+        self.storylines = []
+
         self.load_status()
-        self.load_memory()
         self.load_believes()
         self.load_mood()
+        self.load_memory()
         self.load_rules()
         self.load_storylines()
 
@@ -17,19 +24,19 @@ class Thing(object):
         pass
 
     def load_believes(self):
-        self.believes = [Believe.STRANGER]
+        pass
 
     def load_mood(self):
-        self.mood = [Mood.ANGER]
+        pass
 
     def load_status(self):
-        self.status = Status.ACTIVE
+        pass
 
     def load_rules(self):
-        self.rules = []
+        pass
 
     def load_storylines(self):
-        self.storylines = []
+        pass
 
     def alive(self):
         for storyline in self.storylines:

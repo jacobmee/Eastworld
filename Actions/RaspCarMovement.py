@@ -40,15 +40,14 @@ class CarMovement(Action):
         super(CarMovement, self).finish()
         self.stop()
 
-'''
-MAIN class to move - It should be able to accomplish following:
-#1. Able to move forward and
-    a) Using the Wall Detect to know stop
-    b) Using the Ultrasonic Scan to change the direction
-    c) If it's too close to wall, backward and turn around
-#2. Continue to move forward
-#3. Until'''
+
 class RaspCarMove(CarMovement):
+    """MAIN class to move - It should be able to accomplish following:
+        #1. Able to move forward and
+        #    a) Using the Wall Detect to know stop
+        #    b) Using the Ultrasonic Scan to change the direction
+        #    c) If it's too close to wall, backward and turn around
+        #2. Continue to move forward"""
 
     def __init__(self):
         super(RaspCarMove, self).__init__()
@@ -82,7 +81,7 @@ class RaspCarMove(CarMovement):
     def execute(self):
         super(RaspCarMove, self).execute()
 
-        #while self.running:
+        #  while self.running:
         for i in range(0, 20):
             # Working on block events first.
 
@@ -104,7 +103,6 @@ class RaspCarMove(CarMovement):
                     print_scan = sorted(recent_scan_data.iteritems(), key=lambda d: d[0], reverse=True)
                     logging.debug("Analysing UltraScan data: %s" % print_scan)
 
-
                     go_angle = 0
                     go_range = 0
                     for point in range(90, 31, -15):
@@ -123,7 +121,6 @@ class RaspCarMove(CarMovement):
                             break
 
                     logging.debug("Go: %d, %d" % (go_angle, go_range))
-
 
                     if go_angle == 0 and go_range == 0: # Blocked
                         left_distance = recent_scan_data[150]

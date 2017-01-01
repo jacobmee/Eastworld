@@ -1,6 +1,7 @@
 from Storylines.Storyline import StoryLine
 from Actions.RaspCarMovement import *
 from Actions.RaspCarSurveillance import RaspCarSurveillance
+from Actions.RaspCarConversation import RaspCarConversation
 
 
 class CarStoryLine(StoryLine):
@@ -33,3 +34,10 @@ class RaspCarWatching(CarStoryLine):
     def begin(self):
         super(RaspCarWatching, self).begin()
         self.actions.append(RaspCarSurveillance())
+
+
+# Move forward until block, then turn back, until another block.
+class RaspCarSitting(CarStoryLine):
+    def begin(self):
+        super(RaspCarSitting, self).begin()
+        self.actions.append(RaspCarConversation())
