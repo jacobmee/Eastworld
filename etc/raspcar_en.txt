@@ -1,0 +1,12 @@
+hi thomas
+dolores
+khaleesi
+william
+jone stark
+start engine
+stop engine
+forward
+backward
+next window
+last window
+open music player
