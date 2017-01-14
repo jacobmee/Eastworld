@@ -41,7 +41,7 @@ class CarMovement(Action):
         self.stop()
 
 
-class RaspCarMove(CarMovement):
+class RaspCarMove(CarMovement, threading.Thread):
     """MAIN class to move - It should be able to accomplish following:
         #1. Able to move forward and
         #    a) Using the Wall Detect to know stop
@@ -49,8 +49,11 @@ class RaspCarMove(CarMovement):
         #    c) If it's too close to wall, backward and turn around
         #2. Continue to move forward"""
 
-    def __init__(self):
+    def __init__(self, steps=10):
         super(RaspCarMove, self).__init__()
+        threading.Thread.__init__(self)
+
+        self.move_steps = steps
         self.ultrasonic_data = collections.OrderedDict()
         # Create a thread, and put the detection in.  If the thread already exists, do nothing.
         self.wall_detection = RaspCarWallDetect(self.sensor_events)
@@ -82,7 +85,7 @@ class RaspCarMove(CarMovement):
         super(RaspCarMove, self).execute()
 
         #  while self.running:
-        for i in range(0, 20):
+        for i in range(0, self.move_steps):
             # Working on block events first.
 
             # Get Ultrasonic data  & Adjust direction

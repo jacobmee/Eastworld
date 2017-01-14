@@ -20,12 +20,10 @@ class RaspUltrasonicScan(Action, threading.Thread):
         self.adjustment_events = adjustment_events
         self.ultrasonic_data = data
 
-    def run(self):
-        self.execute()
-
     def checkdist(self):
 
         # Set trigger
+        #logging.debug("Ultrasonic checkdist")
         GPIO.output(self.PIN_TRIGGER, GPIO.HIGH)
         # Wait for 15us
         time.sleep(0.000015)
@@ -106,17 +104,17 @@ class RaspUltrasonicScan(Action, threading.Thread):
                     p.ChangeDutyCycle(0)
                     time.sleep(0.02)
 
-            count = count + 1
+            count += 1
             logging.debug("One ultrasonic scan finished")
 
             self.ultrasonic_data[time.time()] = scanning_data.copy()
 
             time.sleep(0.3)
 
-
     def finish(self):
         super(RaspUltrasonicScan, self).finish()
-        #Clean up the GPIO3, set to input.
+
+        #  Clean up the GPIO3, set to input.
         GPIO.setup(self.PIN_TRIGGER, GPIO.IN)
         GPIO.setup(self.PIN_ROTATION, GPIO.IN)
         logging.debug("Ultrasonic Scan cleaned: PIN[%d] & PIN[%d]" % (self.PIN_TRIGGER, self.PIN_ROTATION))

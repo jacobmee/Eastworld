@@ -9,7 +9,7 @@ for i in range(p.get_device_count()):
         if p.is_format_supported(rate=44100,  # Sample rate
                                input_device=dev['index'],
                                input_channels=dev['maxInputChannels'],
-                               input_format=pyaudio.paInt8):
+                               input_format=pyaudio.paInt16):
             print '44100 - Yay!'
     except ValueError as err:
         print("OS error: {0}".format(err))
@@ -18,7 +18,7 @@ for i in range(p.get_device_count()):
         if p.is_format_supported(rate=16000,  # Sample rate
                                input_device=dev['index'],
                                input_channels=dev['maxInputChannels'],
-                               input_format=pyaudio.paInt8):
+                               input_format=pyaudio.paInt16):
             print '16000 - Yay!'
     except ValueError as err:
         print("OS error: {0}".format(err))
@@ -27,7 +27,7 @@ for i in range(p.get_device_count()):
         if p.is_format_supported(rate=8000,  # Sample rate
                                input_device=dev['index'],
                                input_channels=dev['maxInputChannels'],
-                               input_format=pyaudio.paInt8):
+                               input_format=pyaudio.paInt16):
             print '8000 - Yay!'
     except ValueError as err:
         print("OS error: {0}".format(err))

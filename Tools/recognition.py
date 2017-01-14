@@ -4,6 +4,7 @@ import PyBaiduYuyin as pby
 from gtts import gTTS
 import speech_recognition as sr
 import os
+import pyaudio
 from os import path
 import urllib2
 import sys
@@ -18,60 +19,64 @@ btts.say("你说")
 
 # obtain audio from the microphone
 gr = sr.Recognizer()
-gm = sr.Microphone(sample_rate=16000)
-#gm.RATE = 16000
-#m.CHUNK = 512
+gm = sr.Microphone()
 
 br = pby.Recognizer()
 bm = pby.Microphone()
 
-use_Google = False
-use_Baidu = True
-
-use_wav = True
-use_listen = False
-
-
+use_sphinx_rec = True
+use_Google_rec = False
+use_Google_speak = False
+use_Baidu_rec = False
+use_Baidu_speak = True
 
 
 while True:
 
     text = ""
-    # Try google first if can't access, always use Baidu
-    if use_Google :
-        audio = None
-        os.system('arecord -f S16_LE -r 16000 -d 3 -D plughw:0,0 temp.wav')
+
+    if use_sphinx_rec:
+        os.system('arecord -f S16_LE -r 16000 -d 3 -D plughw:1,0 temp.wav')
         AUDIO_FILE = path.join(path.dirname(path.realpath(__file__)), "temp.wav")
         with sr.AudioFile(AUDIO_FILE) as source:
-            audio = gr.record(source)  # read the entire audio file
+            audio = gr.record(source)  # read the entire audio file]\
 
-
-        '''with gm as source:
-            print("Say something!")
-            audio = gr.listen(source)'''
-
-        # recognize speech using Google Speech Recognition
+        # recognize speech using Sphinx
         try:
-            # for testing purposes, we're just using the default API key
-            # to use another API key, use `r.recognize_google(audio, key="GOOGLE_SPEECH_RECOGNITION_API_KEY")`
-            # instead of `r.recognize_google(audio)`
-            result = gr.recognize_google(audio, GOOGLE_KEY, language="zh-CN")
-            print("Google Speech Recognition thinks you said " + result)
-
-            text = result.encode('utf-8').strip()
-
+            print("Start recognize!")
+            text = gr.recognize_sphinx(audio)
+            print("Sphinx thinks you said " + text)
         except sr.UnknownValueError:
-            print("Google Speech Recogni/tion could not understand audio")
+            print("Sphinx could not understand audio")
         except sr.RequestError as e:
-            print("Could not request results from Google Speech Recognition service; {0}".format(e))
+            print("Sphinx error; {0}".format(e))
 
-    if use_Baidu :
+
+    # Try google first if can't access, always use Baidu
+    if use_Google_rec:
+
+        with gm as source:
+            print("Say something!")
+            gr.adjust_for_ambient_noise(source)
+            audio = gr.listen(source)
+
+        # for testing purposes, we're just using the default API key
+        # to use another API key, use `r.recognize_google(audio, key="GOOGLE_SPEECH_RECOGNITION_API_KEY")`
+        # instead of `r.recognize_google(audio)
+        result = gr.recognize_google(audio, key=GOOGLE_KEY, language="zh-CN")
+        print("Google Speech Recognition thinks you said " + result)
+
+        text = result.encode('utf-8').strip()
+
+    if use_Baidu_rec:
+
 
         #with bm as source:
+        #    print("Say something!")
         #    br.adjust_for_ambient_noise(source) # listen for 1 second to calibrate the energy threshold for ambient noise levels
         #    audio = br.listen(source)
 
-        os.system('arecord -f S16_LE -r 16000 -d 3 -D plughw:0,0 temp.wav')
+        os.system('arecord -f S16_LE -r 16000 -d 3 -D plughw:1,0 temp.wav')
         AUDIO_FILE = path.join(path.dirname(path.realpath(__file__)), "temp.wav")
         with pby.WavFile(AUDIO_FILE) as source:
             audio = br.record(source)  # read the entire audio file
@@ -114,12 +119,12 @@ while True:
     else:
         answer = answer.encode('utf-8').strip()
 
-    if use_Google:
+    if use_Google_speak:
         audio_file = "temp.mp3"
         gtts = gTTS(answer, lang="zh-cn")
         gtts.save(audio_file)
         os.system('mpg123 "%s"' % audio_file)
 
-    if use_Baidu:
+    if use_Baidu_speak:
         # print resultTmp[u'alternative'], type(resultTmp[u'alternative'])
         btts.say(answer)

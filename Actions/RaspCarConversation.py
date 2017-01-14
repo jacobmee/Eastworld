@@ -6,9 +6,12 @@ import json
 import logging
 import time
 import PyBaiduYuyin as pby
+import speech_recognition as sr
 
 from os import path
 from Actions.Action import Action
+from Actions.RaspCarEyeRolling import RaspCarEyeRolling
+from Actions.RaspCarMovement import RaspCarMove
 
 
 class RaspCarConversation(Action):
@@ -16,24 +19,67 @@ class RaspCarConversation(Action):
     def voice_control(self, conversation_request):
         conversation_response = ""
 
-        if "启动" in conversation_request:
-            logging.debug("Voice control to move forward")
-        elif "糖糖" in conversation_request:
-            conversation_response = "你在叫我？"
-            self.enable_turing_machine = True
-        elif "再见" in conversation_request or "拜拜" in conversation_request:
-            if self.enable_turing_machine:
-                conversation_response = "再见"
-                self.enable_turing_machine = False
+        # Actions require already in interaction mode.
+        if self.is_interactive:
+            if "运动" in conversation_request:
+                logging.debug("VOICE: Move forward")
+                conversation_response = "来追我啊"
+
+                # Create a thread and make eye rolling action.
+                raspcar_move = RaspCarMove(steps=5)
+                raspcar_move.setDaemon(True)
+                raspcar_move.start()
+
+            if "音乐" in conversation_request or  "唱歌" in conversation_request:
+                    logging.debug("VOICE: Music")
+                    conversation_response = "来点我的最爱"
+
+                    # Create a thread and make eye rolling action.
+                    os.system('sh /home/pi/Eastworld/etc/music.sh start')
+                    self.is_listening = False
+                    time.sleep(300)
+                    os.system('sh /home/pi/Eastworld/etc/music.sh stop')
+                    self.is_listening = True
+
+            if "电台" in conversation_request:
+                    logging.debug("VOICE: Radio")
+                    conversation_response = "电台这么老掉牙的你也听？"
+
+                    # Create a thread and make eye rolling action.
+                    os.system('sh /home/pi/Eastworld/etc/radio.sh start')
+                    self.is_listening = False
+                    time.sleep(300)
+                    os.system('sh /home/pi/Eastworld/etc/radio.sh stop')
+                    self.is_listening = True
+
+            elif "再见" in conversation_request or "拜拜" in conversation_request:
+                if self.is_interactive:
+                    logging.debug("VOICE: Bye")
+                    conversation_response = "再见"
+                    self.is_interactive = False
+
+        # Actions for wake up or surprising
+        if not self.is_interactive:
+            if "DOLORES" in conversation_request:
+                logging.debug("VOICE: Wake me up")
+                conversation_response = "你在叫我？"
+                self.is_interactive = True
+                self.silent_counts = 0
+
+                # Create a thread and make eye rolling action.
+                eye_rolling = RaspCarEyeRolling()
+                eye_rolling.setDaemon(True)
+                eye_rolling.start()
+
         if conversation_response != "":
-            logging.debug("Voice control responses: %s" % conversation_response)
+            logging.debug("VOICE RES: %s" % conversation_response)
+
         return conversation_response
 
     def __init__(self):
         super(RaspCarConversation, self).__init__()
-        self.in_conversation = True
-        self.enable_voice_control = True
-        self.enable_turing_machine = False
+        self.is_listening = True
+        self.is_interactive = False
         self.silent_counts = 0
 
     def execute(self):
@@ -45,12 +91,13 @@ class RaspCarConversation(Action):
         b_tts.say("似乎睡了好久")
 
         # obtain audio from the microphone
+        gr = sr.Recognizer()
         br = pby.Recognizer()
         # bm = pby.Microphone()
 
         while True:
 
-            if not self.in_conversation:
+            if not self.is_listening:
                 time.sleep(3)  # Wait for 3 seconds, in case conversion is stopped, and it goes to a different action
                 continue
 
@@ -64,33 +111,50 @@ class RaspCarConversation(Action):
             #    audio = br.listen(source)
 
             # Use the system record to save as wav file, then read to Baidu.
+            os.system('arecord -f S16_LE -r 16000 -d 3 -D plughw:1,0 /home/pi/Eastworld/etc/temp.wav')
 
-            os.system('arecord -f S16_LE -r 16000 -d 3 -D plughw:0,0 etc/temp.wav')
-            audio_file = path.join(path.dirname(path.realpath(__file__)), "/home/pi/Eastworld/etc/temp.wav")
-            with pby.WavFile(audio_file) as source:
-                audio = br.record(source)  # read the entire audio file
+            if not self.is_interactive:
+                AUDIO_FILE = path.join(path.dirname(path.realpath(__file__)), "/home/pi/Eastworld/etc/temp.wav")
+                with sr.AudioFile(AUDIO_FILE) as source:
+                    audio = gr.record(source)  # read the entire audio file]\
 
-            # recognize speech using Baidu Speech Recognition
-            try:
-                result = br.recognize(audio)
-                conversation_request = result.encode('utf-8').strip()
-                logging.debug("Recognized: %s" % conversation_request)
-            except LookupError as err:
-                logging.info("Baidu Speech Recognition could not understand audio; {0}".format(err))
-            except ValueError as err:
-                logging.info("Baidu Speech Recognition could not understand audio; {0}".format(err))
+                # recognize speech using Sphinx
+                try:
+                    conversation_request = gr.recognize_sphinx(audio)
+                    logging.debug("Sphinx: Recognized: %s" % conversation_request)
+                except sr.UnknownValueError:
+                    print("Sphinx could not understand audio")
+                except sr.RequestError as e:
+                    print("Sphinx error; {0}".format(e))
 
-            if self.enable_voice_control:
-                conversation_response = self.voice_control(conversation_request)
+            else:
+                audio_file = path.join(path.dirname(path.realpath(__file__)), "/home/pi/Eastworld/etc/temp.wav")
+                with pby.WavFile(audio_file) as source:
+                    audio = br.record(source)  # read the entire audio file
 
+                # recognize speech using Baidu Speech Recognition
+                try:
+                    result = br.recognize(audio)
+                    conversation_request = result.encode('utf-8').strip()
+                    logging.debug("Baidu: Recognized: %s" % conversation_request)
+                except LookupError as err:
+                    logging.info("Baidu Speech Recognition Lookup {0}, %d".format(err) % self.silent_counts)
+                except ValueError as err:
+                    logging.info("Baidu Speech Recognition Value {0}".format(err))
+
+            # Goes into voice control
+            conversation_response = self.voice_control(conversation_request)
+
+            # if nothing to say in 30 seconds, say good bye.
             if conversation_request == "":
-                self.silent_counts = self.silent_counts + 1
-                if self.silent_counts == 10:
-                    self.enable_turing_machine = False
+                self.silent_counts += 1
+                if self.silent_counts == 10 and self.is_interactive:
+                    self.is_interactive = False
                     conversation_response = "再见"
+                    logging.debug("IDLE: Bye")
 
             # Turn to turing machine for answers.
-            if self.enable_turing_machine and conversation_request != "" and conversation_response == "":
+            if self.is_interactive and conversation_request != "" and conversation_response == "":
                 url = "http://apis.baidu.com/turing/turing/turing?"
                 key = "879a6cb3afb84dbf4fc84a1df2ab7319"
                 user_id = "1000"

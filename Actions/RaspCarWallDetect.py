@@ -18,9 +18,6 @@ class RaspCarWallDetect(Action, threading.Thread):
         self.block_events = block_events
         self.recommend_direction = 0
 
-    def run(self):
-        self.execute()
-
     def execute(self):
         super(RaspCarWallDetect, self).execute()
         self.running = True

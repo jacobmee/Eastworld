@@ -14,12 +14,12 @@
 case "$1" in
     start)
         echo "Starting Raspcar"
-        /home/pi/Eastworld/start.py watching &
+        python /home/pi/Eastworld/start.py &
         ;;
     stop)
         echo "Stopping Raspcar"
         #killall start.py
-        kill $(ps aux | grep -m 1 'python /home/pi/Eastworld/start.py watching' | awk '{ print $2 }')
+        kill $(ps aux | grep -m 1 'python start.py' | awk '{ print $2 }')
         ;;
     *)
         echo "Usage: service Raspcar start|stop"
