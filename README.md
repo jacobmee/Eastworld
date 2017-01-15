@@ -110,6 +110,7 @@ After all, verify with the commands with -verion option.
     $ javac -version
     
 ### Camera behavior
-Install opencv
+Install opencv2 and imutils
     
+    sudo pip install imutils
     sudo apt-get install python-opencv
