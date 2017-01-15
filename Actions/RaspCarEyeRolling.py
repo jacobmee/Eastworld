@@ -9,7 +9,7 @@ from Actions.Action import Action
 from Actions.RaspCarMovement import *
 
 class RaspCarEyeRolling(Action, threading.Thread):
-    # HC-SR04, the farest it can get is 4.5m.  Pin03 (GPIO02) for "Trig" and Pin05 (GPIO03) for "Echo"
+    # Rotation engine for HC-SR04.
     PIN_ROTATION = 36
 
     def __init__(self, ):
@@ -24,7 +24,7 @@ class RaspCarEyeRolling(Action, threading.Thread):
         logging.debug("RaspCarEyeRolling setup: PIN[%d]" % (self.PIN_ROTATION))
 
         GPIO.output(self.PIN_ROTATION, GPIO.HIGH)
-        p = GPIO.PWM(36, 50)  # 50HZ
+        p = GPIO.PWM(self.PIN_ROTATION, 50)  # 50HZ
         p.start(0)
 
         start_point = 2.5

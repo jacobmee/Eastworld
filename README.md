@@ -108,3 +108,8 @@ After all, verify with the commands with -verion option.
     
     $ java -version
     $ javac -version
+    
+### Camera behavior
+Install opencv
+    
+    sudo apt-get install python-opencv

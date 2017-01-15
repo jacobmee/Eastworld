@@ -12,6 +12,7 @@ from os import path
 from Actions.Action import Action
 from Actions.RaspCarEyeRolling import RaspCarEyeRolling
 from Actions.RaspCarMovement import RaspCarMove
+from Actions.RaspCarBodyDetect import RaspCarCamera
 
 
 class RaspCarConversation(Action):
@@ -31,26 +32,45 @@ class RaspCarConversation(Action):
                 raspcar_move.start()
 
             if "音乐" in conversation_request or  "唱歌" in conversation_request:
-                    logging.debug("VOICE: Music")
-                    conversation_response = "来点我的最爱"
+                logging.debug("VOICE: Music")
+                conversation_response = "来点我的最爱"
 
-                    # Create a thread and make eye rolling action.
-                    os.system('sh /home/pi/Eastworld/etc/music.sh start')
-                    self.is_listening = False
-                    time.sleep(300)
-                    os.system('sh /home/pi/Eastworld/etc/music.sh stop')
-                    self.is_listening = True
+                # Create a thread and make eye rolling action.
+                os.system('sh /home/pi/Eastworld/etc/music.sh start')
+                self.is_listening = False
+                time.sleep(300)
+                os.system('sh /home/pi/Eastworld/etc/music.sh stop')
+                self.is_listening = True
 
             if "电台" in conversation_request:
-                    logging.debug("VOICE: Radio")
-                    conversation_response = "电台这么老掉牙的你也听？"
+                logging.debug("VOICE: Radio")
+                conversation_response = "电台这么老掉牙的你也听？"
 
-                    # Create a thread and make eye rolling action.
-                    os.system('sh /home/pi/Eastworld/etc/radio.sh start')
-                    self.is_listening = False
-                    time.sleep(300)
-                    os.system('sh /home/pi/Eastworld/etc/radio.sh stop')
-                    self.is_listening = True
+                # Create a thread and make eye rolling action.
+                os.system('sh /home/pi/Eastworld/etc/radio.sh start')
+                self.is_listening = False
+                time.sleep(300)
+                os.system('sh /home/pi/Eastworld/etc/radio.sh stop')
+                self.is_listening = True
+
+            if "我是谁" in conversation_request:
+                logging.debug("VOICE: who am I")
+
+                # user = {'user_id': user_id, 'confidence': confidence, 'time': time.time()}
+                if len(self.people_list) > 0:
+                    user = self.people_list[0]
+                    user_id = user['user_id']
+                    if float(user['confidence']) > 7.0:
+                        conversation_response += "我认识你啊，你是"
+                    elif float(user['confidence']) > 5.0:
+                        conversation_response += "我不太看得清，你是不是"
+
+                    if "jacob" in user_id:
+                        conversation_response += "大宓啊"
+                    elif "lily" in user_id:
+                        conversation_response += "丽丽啊"
+                    elif "max" in user_id:
+                        conversation_response += "宓宓啊"
 
             elif "再见" in conversation_request or "拜拜" in conversation_request:
                 if self.is_interactive:
@@ -67,9 +87,13 @@ class RaspCarConversation(Action):
                 self.silent_counts = 0
 
                 # Create a thread and make eye rolling action.
-                eye_rolling = RaspCarEyeRolling()
-                eye_rolling.setDaemon(True)
-                eye_rolling.start()
+                # eye_rolling = RaspCarEyeRolling()
+                # eye_rolling.setDaemon(True)
+                # eye_rolling.start()
+
+                raspcar_camera = RaspCarCamera(self.people_list)
+                raspcar_camera.setDaemon(True)
+                raspcar_camera.start()
 
         if conversation_response != "":
             logging.debug("VOICE RES: %s" % conversation_response)
@@ -81,6 +105,7 @@ class RaspCarConversation(Action):
         self.is_listening = True
         self.is_interactive = False
         self.silent_counts = 0
+        self.people_list = []
 
     def execute(self):
         api_key = "QUQgAhhdfODY9KbaR7928pHN"
