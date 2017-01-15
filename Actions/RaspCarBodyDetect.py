@@ -71,17 +71,19 @@ class RaspCarCamera(Action, threading.Thread):
         face_cascade = cv2.CascadeClassifier('/home/pi/Eastworld/etc/frontalface.xml')
 
         num = 0
+        frame_count = 0
         fps = FPS().start()
         # Capture frames from the camera
         stream = camera.capture_continuous(rawCapture, format="bgr", use_video_port=True)
         for frame in stream:
             image = frame.array
+            frame_count += 1
 
             # Use the cascade file we loaded to detect faces
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minSize=(64, 64))
 
-            logging.debug("Found %d faces" % len(faces))
+            logging.debug("Found %d faces in frame %d" % (len(faces), frame_count))
 
             # Draw a rectangle around every face and move the motor towards the face
             for (x, y, w, h) in faces:
@@ -101,7 +103,7 @@ class RaspCarCamera(Action, threading.Thread):
 
             fps.update()
             # stop the camera
-            if num > 0:
+            if num > 0 or frame_count > 60:
                 break
 
         # stop the timer and display FPS information
