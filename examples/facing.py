@@ -75,7 +75,7 @@ for frame in stream:
 
     # Use the cascade file we loaded to detect faces
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minSize=(64, 64))
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minSize=(48, 48))
 
     logging.debug("Found %d faces in frame %d" % (len(faces), frame_count))
 
@@ -90,14 +90,14 @@ for frame in stream:
         image_name = 'capture_%d.jpg' % num
         cv2.imwrite(image_name, image)
         logging.info("Searching faces %d ..." % num)
-        search_people(image_name)
+        #search_people(image_name)
 
     # Clear the stream in preparation for the next frame
     rawCapture.truncate(0)
 
     fps.update()
     # stop the camera
-    if num > 0 or frame_count > 20:
+    if num > 10 or frame_count > 200:
         break
 
 # stop the timer and display FPS information

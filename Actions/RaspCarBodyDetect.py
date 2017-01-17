@@ -81,7 +81,7 @@ class RaspCarCamera(Action, threading.Thread):
 
             # Use the cascade file we loaded to detect faces
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minSize=(64, 64))
+            faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minSize=(48, 48))
 
             logging.debug("Found %d faces in frame %d" % (len(faces), frame_count))
 

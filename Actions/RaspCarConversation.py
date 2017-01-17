@@ -180,9 +180,9 @@ class RaspCarConversation(Action):
 
             # Turn to turing machine for answers.
             if self.is_interactive and conversation_request != "" and conversation_response == "":
-                url = "http://apis.baidu.com/turing/turing/turing?"
-                key = "879a6cb3afb84dbf4fc84a1df2ab7319"
-                user_id = "1000"
+                url = "http://www.tuling123.com/openapi/api?"
+                key = "45fa933f47bb45fb8e7746759ba9b24a"
+                user_id = "10000"
 
                 # words = urllib2.Parse.quote(words)
                 url = url + "key=" + key + "&info=" + conversation_request + "&userid=" + user_id
@@ -196,15 +196,22 @@ class RaspCarConversation(Action):
 
                     if content:
                         data = json.loads(content.decode("utf-8"))
+                        #logging.debug("Baidu Turing: %s" %data)
                         conversation_response = data["text"].encode('utf-8').strip()
                         self.silent_counts = 0
                 except ValueError as err:
                     logging.error("Baidu Turing could not do the service; {0}".format(err))
+                    conversation_response = "我都惊呆了"
+                except KeyError as err:
+                    logging.error("Baidu Turing could not do the service; {0}".format(err))
+                    conversation_response = "让我静一静"
 
                 logging.debug("Turing answered: %s" % conversation_response)
 
             try:
                 if conversation_response != "":
+                    if len(conversation_response) > 1024:
+                        conversation_response = conversation_response[0:1024]
                     b_tts.say(conversation_response)
             except ValueError as err:
                 logging.error("Baidu Text to Speak could not do the service; {0}".format(err))
