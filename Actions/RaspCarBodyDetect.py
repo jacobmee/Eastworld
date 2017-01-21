@@ -20,12 +20,13 @@ class RaspBodyMovingDetect(Action):
     # HC-SR501 Pin011 (GPIO17) for detection
     def execute(self):
         super(RaspBodyMovingDetect, self).execute()
+        PIN_DETECTION = 11
         GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(11, GPIO.IN)
+        GPIO.setup(PIN_DETECTION, GPIO.IN)
 
         try:
             while True:
-                if GPIO.input(11) == 1:
+                if GPIO.input(PIN_DETECTION) == 1:
                     logging.debug("Some people here!")
 
                     # Getting images

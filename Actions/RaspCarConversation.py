@@ -7,6 +7,8 @@ import logging
 import time
 import PyBaiduYuyin as pby
 import speech_recognition as sr
+import RPi.GPIO as GPIO
+import logging.config
 
 from os import path
 from Actions.Action import Action
@@ -16,6 +18,16 @@ from Actions.RaspCarBodyDetect import RaspCarCamera
 
 
 class RaspCarConversation(Action):
+    # LED color
+    PIN_LED_RED = 33
+    PIN_LED_GREEN = 31
+    PIN_LED_BLUE = 29
+
+    # color
+    color_listening = [0, 0, 205]  # Medium Blue
+    color_speaking = [0, 100, 0]  # Sea Green
+    color_thinking = [80, 0, 80]  # Purple
+    color_sleeping = [0, 0, 0]  # dark
 
     def voice_control(self, conversation_request):
         conversation_response = ""
@@ -72,6 +84,17 @@ class RaspCarConversation(Action):
                     elif "max" in user_id:
                         conversation_response += "宓宓啊"
 
+            elif "你睡吧" in conversation_request:
+
+                if self.is_interactive:
+                    logging.debug("VOICE: Go sleep")
+
+                    conversation_response = "正好好久没休息了，让我好好睡一觉！"
+
+                    self.is_interactive = False
+                    self.is_listening = False
+                    self.sleep_time = 3*60*60  # Sleep for three hours.
+
             elif "再见" in conversation_request or "拜拜" in conversation_request:
                 if self.is_interactive:
                     logging.debug("VOICE: Bye")
@@ -100,12 +123,37 @@ class RaspCarConversation(Action):
 
         return conversation_response
 
+    def finish(self):
+        super(RaspCarConversation, self).finish()
+        GPIO.setup(self.PIN_LED_BLUE, GPIO.IN)
+        GPIO.setup(self.PIN_LED_GREEN, GPIO.IN)
+        GPIO.setup(self.PIN_LED_RED, GPIO.IN)
+        logging.debug("LED cleaned: PIN[%d], PIN[%d], PIN[%d]" % (self.PIN_LED_RED, self.PIN_LED_GREEN, self.PIN_LED_BLUE))
+
     def __init__(self):
         super(RaspCarConversation, self).__init__()
         self.is_listening = True
+        self.sleep_time = 3
         self.is_interactive = False
         self.silent_counts = 0
         self.people_list = []
+
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(self.PIN_LED_RED, GPIO.OUT)
+        GPIO.setup(self.PIN_LED_GREEN, GPIO.OUT)
+        GPIO.setup(self.PIN_LED_BLUE, GPIO.OUT)
+
+        self.led_red = GPIO.PWM(self.PIN_LED_RED, 50)
+        self.led_red.start(0)
+        self.led_green = GPIO.PWM(self.PIN_LED_GREEN, 50)
+        self.led_green.start(0)
+        self.led_blue = GPIO.PWM(self.PIN_LED_BLUE, 50)
+        self.led_blue.start(0)
+
+    def set_color(self, color):
+        self.led_red.ChangeDutyCycle(color[0] / 2.55)
+        self.led_green.ChangeDutyCycle(color[1] / 2.55)
+        self.led_blue.ChangeDutyCycle(color[2] / 2.55)
 
     def execute(self):
         api_key = "QUQgAhhdfODY9KbaR7928pHN"
@@ -123,7 +171,11 @@ class RaspCarConversation(Action):
         while True:
 
             if not self.is_listening:
-                time.sleep(3)  # Wait for 3 seconds, in case conversion is stopped, and it goes to a different action
+                logging.info("I'm going to sleep for [%d]s" % self.sleep_time)
+                self.set_color(self.color_sleeping)
+                time.sleep(self.sleep_time)
+                self.is_listening = True
+                self.set_color(self.color_listening)
                 continue
 
             conversation_request = ""
@@ -136,7 +188,9 @@ class RaspCarConversation(Action):
             #    audio = br.listen(source)
 
             # Use the system record to save as wav file, then read to Baidu.
+            self.set_color(self.color_listening)
             os.system('arecord -f S16_LE -r 16000 -d 3 -D plughw:1,0 /home/pi/Eastworld/etc/temp.wav')
+            self.set_color(self.color_thinking)
 
             if not self.is_interactive:
                 AUDIO_FILE = path.join(path.dirname(path.realpath(__file__)), "/home/pi/Eastworld/etc/temp.wav")
@@ -212,6 +266,9 @@ class RaspCarConversation(Action):
                 if conversation_response != "":
                     if len(conversation_response) > 1024:
                         conversation_response = conversation_response[0:1024]
+
+                    self.set_color(self.color_speaking)
                     b_tts.say(conversation_response)
+                    self.set_color(self.color_thinking)
             except ValueError as err:
                 logging.error("Baidu Text to Speak could not do the service; {0}".format(err))
