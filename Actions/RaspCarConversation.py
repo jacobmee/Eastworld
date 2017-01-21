@@ -24,10 +24,10 @@ class RaspCarConversation(Action):
     PIN_LED_BLUE = 29
 
     # color
-    color_listening = [0, 0, 205]  # Medium Blue
-    color_speaking = [0, 100, 0]  # Sea Green
-    color_thinking = [80, 0, 80]  # Purple
-    color_sleeping = [0, 0, 0]  # dark
+    color_listening = [0, 0, 125]  # Blue
+    color_speaking = [0, 125, 0]  # Green
+    color_thinking = [125, 0, 0]  # Red
+    color_sleeping = [0, 0, 0]  # Dark
 
     def voice_control(self, conversation_request):
         conversation_response = ""
