@@ -14,6 +14,7 @@
 case "$1" in
     start)
         echo "Starting Raspcar"
+        mpc stop
         python /home/pi/Eastworld/start.py &
         ;;
     stop)

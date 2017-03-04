@@ -5,12 +5,13 @@ import urllib2
 import json
 import logging
 import time
-import PyBaiduYuyin as pby
 import speech_recognition as sr
 import RPi.GPIO as GPIO
 import logging.config
 
+
 from os import path
+from Base import BDYY as pby
 from Actions.Action import Action
 from Actions.RaspCarEyeRolling import RaspCarEyeRolling
 from Actions.RaspCarMovement import RaspCarMove
@@ -42,8 +43,7 @@ class RaspCarConversation(Action):
                 raspcar_move = RaspCarMove(steps=5)
                 raspcar_move.setDaemon(True)
                 raspcar_move.start()
-
-            if "音乐" in conversation_request or  "唱歌" in conversation_request:
+            elif "音乐" in conversation_request or  "唱歌" in conversation_request:
                 logging.debug("VOICE: Music")
                 conversation_response = "来点我的最爱"
 
@@ -53,8 +53,7 @@ class RaspCarConversation(Action):
                 time.sleep(300)
                 os.system('sh /home/pi/Eastworld/etc/music.sh stop')
                 self.is_listening = True
-
-            if "电台" in conversation_request:
+            elif "电台" in conversation_request:
                 logging.debug("VOICE: Radio")
                 conversation_response = "电台这么老掉牙的你也听？"
 
@@ -64,8 +63,7 @@ class RaspCarConversation(Action):
                 time.sleep(300)
                 os.system('sh /home/pi/Eastworld/etc/radio.sh stop')
                 self.is_listening = True
-
-            if "我是谁" in conversation_request:
+            elif "是谁" in conversation_request or "认识" in conversation_request:
                 logging.debug("VOICE: who am I")
 
                 # user = {'user_id': user_id, 'confidence': confidence, 'time': time.time()}
@@ -75,7 +73,7 @@ class RaspCarConversation(Action):
                     if float(user['confidence']) > 7.0:
                         conversation_response += "我认识你啊，你是"
                     elif float(user['confidence']) > 5.0:
-                        conversation_response += "我不太看得清，你是不是"
+                        conversation_response += "我不太看得清，是不是"
 
                     if "jacob" in user_id:
                         conversation_response += "大宓啊"
@@ -83,9 +81,13 @@ class RaspCarConversation(Action):
                         conversation_response += "丽丽啊"
                     elif "max" in user_id:
                         conversation_response += "宓宓啊"
-
+                    elif "grandma" in user_id:
+                        conversation_response += "奶奶啊"
+                    elif "grandpa" in user_id:
+                        conversation_response += "爷爷啊"
+                    else:
+                        conversation_response += user_id.encode('utf-8').strip()
             elif "你睡吧" in conversation_request:
-
                 if self.is_interactive:
                     logging.debug("VOICE: Go sleep")
 
@@ -94,7 +96,6 @@ class RaspCarConversation(Action):
                     self.is_interactive = False
                     self.is_listening = False
                     self.sleep_time = 3*60*60  # Sleep for three hours.
-
             elif "再见" in conversation_request or "拜拜" in conversation_request:
                 if self.is_interactive:
                     logging.debug("VOICE: Bye")
@@ -103,7 +104,7 @@ class RaspCarConversation(Action):
 
         # Actions for wake up or surprising
         if not self.is_interactive:
-            if "DOLORES" in conversation_request:
+            if "HI DOLORES" in conversation_request:
                 logging.debug("VOICE: Wake me up")
                 conversation_response = "你在叫我？"
                 self.is_interactive = True
@@ -208,12 +209,10 @@ class RaspCarConversation(Action):
 
             else:
                 audio_file = path.join(path.dirname(path.realpath(__file__)), "/home/pi/Eastworld/etc/temp.wav")
-                with pby.WavFile(audio_file) as source:
-                    audio = br.record(source)  # read the entire audio file
 
                 # recognize speech using Baidu Speech Recognition
                 try:
-                    result = br.recognize(audio)
+                    result = br.recognize_WAV(audio_file)
                     conversation_request = result.encode('utf-8').strip()
                     logging.debug("Baidu: Recognized: %s" % conversation_request)
                 except LookupError as err:

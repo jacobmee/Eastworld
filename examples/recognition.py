@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
-import PyBaiduYuyin as pby
-from gtts import gTTS
-import speech_recognition as sr
-import os
-import pyaudio
-from os import path
-import urllib2
-import sys
 import json
+import os
+import urllib2
+from os import path
+
+import speech_recognition as sr
+from gtts import gTTS
+
+from Base import BDYY as pby
 
 apiKey = "QUQgAhhdfODY9KbaR7928pHN"
 secretKey = "f994c8815ddef688325fe3be89ffc3d5"
@@ -24,16 +24,17 @@ gm = sr.Microphone()
 br = pby.Recognizer()
 bm = pby.Microphone()
 
-use_sphinx_rec = True
+use_sphinx_rec = False
 use_Google_rec = False
 use_Google_speak = False
-use_Baidu_rec = False
+use_Baidu_rec = True
 use_Baidu_speak = True
 
 
 while True:
 
     text = ""
+    answer = ""
 
     if use_sphinx_rec:
         os.system('arecord -f S16_LE -r 16000 -d 3 -D plughw:1,0 temp.wav')
@@ -78,11 +79,8 @@ while True:
 
         os.system('arecord -f S16_LE -r 16000 -d 3 -D plughw:1,0 temp.wav')
         AUDIO_FILE = path.join(path.dirname(path.realpath(__file__)), "temp.wav")
-        with pby.WavFile(AUDIO_FILE) as source:
-            audio = br.record(source)  # read the entire audio file
-
         # instead of `r.recognize_google(audio, show_all=True)`
-        result = br.recognize(audio)
+        result = br.recognize_WAV(AUDIO_FILE)
         text = result.encode('utf-8').strip()
 
     print "Recognized: %s" % text

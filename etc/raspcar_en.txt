@@ -10,3 +10,7 @@ backward
 next window
 last window
 open music player
+
+look at me
+listen
+come on
