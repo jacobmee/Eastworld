@@ -13,7 +13,7 @@ if __name__ == "__main__":
         rasp_car = RaspCar("Tang", sys.argv[1])
         rasp_car.alive()
     else:
-        rasp_car = RaspCar("Tang", RaspCar.SITTING_MODE)
+        rasp_car = RaspCar("Tang", RaspCar.PARTY_MODE)
         rasp_car.alive()
 
 
